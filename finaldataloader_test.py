@@ -7,6 +7,11 @@ def load_test():
     file_path = 'test_fix.csv'
     raw_df = pd.read_csv(file_path)
     #Getting price data for training
+    
+    raw_df.loc[2549,('GrLivArea')]  = raw_df['GrLivArea'].median()
+    raw_df.loc[2549,('LotArea')]  = raw_df['LotArea'].median()
+    
+    
     ID = raw_df['Id']
         
     attributes = raw_df.drop(['Id'],axis = 1)
@@ -24,11 +29,11 @@ def load_test():
     attributes['GarageCars'] = attributes['GarageCars'].fillna(0)
     attributes['GarageArea'] = attributes['GarageArea'].fillna(0)
     attributes['BsmtFinSF1'] = attributes['BsmtFinSF1'].fillna(0)
-    attributes['Functional'] = attributes['Functional'].fillna('Typ')
-    attributes['KitchenQual'] = attributes['KitchenQual'].fillna('TA')
+    attributes['Functional'] = attributes['Functional'].fillna(attributes['Functional'].mode()[0])
+    attributes['KitchenQual'] = attributes['KitchenQual'].fillna(attributes['KitchenQual'].mode()[0])
     attributes['BsmtFinSF1'] = attributes['BsmtFinSF1'].fillna(0)
-    attributes['KitchenQual'] = attributes['KitchenQual'].fillna('TA')
-    attributes['MSZoning'] = attributes['MSZoning'].fillna('RL')
+    attributes['KitchenQual'] = attributes['KitchenQual'].fillna(attributes['KitchenQual'].mode()[0])
+    attributes['MSZoning'] = attributes['MSZoning'].fillna(attributes['MSZoning'].mode()[0])
     
     
     
@@ -47,9 +52,9 @@ def load_test():
     attributes['BsmtUnfSF'] = attributes['BsmtUnfSF'].fillna(0)
     attributes['BsmtFullBath'] = attributes['BsmtFullBath'].fillna(0)
     
-    attributes['Utilities'] =attributes['Utilities'].fillna('AllPub')
-    attributes['Exterior1st'] =attributes['Exterior1st'].fillna('Other')
-    attributes['Exterior2nd'] =attributes['Exterior2nd'].fillna('Other')
+    attributes['Utilities'] =attributes['Utilities'].fillna(attributes['Utilities'].mode()[0])
+    attributes['Exterior1st'] =attributes['Exterior1st'].fillna(attributes['Exterior1st'].mode()[0])
+    attributes['Exterior2nd'] =attributes['Exterior2nd'].fillna(attributes['Exterior2nd'].mode()[0])
     attributes['BsmtExposure'] =attributes['BsmtExposure'].fillna('No')
     attributes['BsmtFinSF2'] =attributes['BsmtFinSF2'].fillna(0)
     attributes['BsmtHalfBath'] =attributes['BsmtHalfBath'].fillna(0)
@@ -58,7 +63,7 @@ def load_test():
     attributes['GarageFinish'] = attributes['GarageFinish'].fillna('NA')
     attributes['GarageQual'] = attributes['GarageQual'].fillna('NA')
     attributes['GarageCond'] = attributes['GarageCond'].fillna('NA')
-    attributes['SaleType'] = attributes['SaleType'].fillna('WD')
+    attributes['SaleType'] = attributes['SaleType'].fillna(attributes['SaleType'].mode()[0])
     
     
     
