@@ -22,9 +22,27 @@ def train_loader():
                         'HeatingQC','KitchenQual','Functional','BsmtFinType1','BsmtFinType2','BsmtQual','BsmtCond']
     from sklearn.preprocessing import LabelEncoder
     
+    
+    
+    
+    
     prices = attributes_with_price['SalePrice']
     attributes = attributes_with_price.drop(['SalePrice'],axis = 1)
     prices = np.log(prices)
+    
+    from scipy.special import boxcox1p
+    lam = 0.30
+    
+    count_log = ['LotFrontage','LotArea','GrLivArea','TotRmsAbvGrd','1stFlrSF']
+
+    count_box = ['BsmtUnfSF','GarageArea']
+
+    for feature in count_log:
+        attributes[feature] = np.log1p(attributes[feature])
+
+
+    for feature in count_box:
+        attributes[feature] = boxcox1p(attributes[feature],lam)
     
     
     #Imputing Missing values
@@ -54,7 +72,7 @@ def train_loader():
     
     # attributes_with_price = attributes_with_price.dropna(axis = 1)
     
-    print(attributes.isnull().sum())
+    # print(attributes.isnull().sum())
     
     
     for feature in ordinal_features:
