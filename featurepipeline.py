@@ -127,23 +127,131 @@ class CategoricalTransformer(BaseEstimator, TransformerMixin):
         X = X.drop('tmp_left', axis=1)
         X = X.fillna(0)
         return X
+
+    
+
+class OrdinalTransformer(BaseEstimator, TransformerMixin):
+    
+    def __init__(self): # no *args or **kargs
+        self.ordinal_features = ['YearBuilt','YearRemodAdd','OverallQual','OverallCond','ExterQual','ExterCond','BsmtQual','BsmtCond','BsmtExposure',
+                    'HeatingQC','KitchenQual','Functional','FireplaceQu','GarageQual','GarageCond','PoolQC']
         
+    def fit(self, X, y=None):
+        return self # nothing else to do
+        
+    def transform(self, X, y=None):        
+        from sklearn.preprocessing import LabelEncoder
+
+        for feature in self.ordinal_features:
+            #initialize new instance of labelencoder
+            le = LabelEncoder()
+            le.fit(X[feature])
+            X[feature] = le.transform(X[feature])
+        return X
+        
+
+class FeaturePruner(BaseEstimator, TransformerMixin):
+    
+    def __init__(self): # no *args or **kargs
+        self.features_to_drop = ['MSSubClass','PoolQC','MiscFeature','Alley',
+                                 'Fence','FireplaceQu','YrSold','MoSold',
+                                 'MiscVal','GarageType']
+
+        print('Dropping features')
+
+        
+    def fit(self, X, y=None):
+        return self # nothing else to do
+        
+    def transform(self, X, y=None):        
+        X = X.drop(self.features_to_drop,axis=1)
+        return X
+
+
+class FeatureCreator(BaseEstimator, TransformerMixin):
+    
+    def __init__(self): # no *args or **kargs
+        print('Creating new features')
+
+        
+    def fit(self, X, y=None):
+        return self # nothing else to do
+        
+    def transform(self, X, y=None):        
+        X['TotalSF'] = X['TotalBsmtSF'] + X['1stFlrSF'] + X['2ndFlrSF']
+        X['PorchSF'] = X['OpenPorchSF'] + X['3SsnPorch'] + X['EnclosedPorch'] + X['ScreenPorch'] + X['WoodDeckSF']
+        X['TotalBath'] = X['BsmtFullBath'] + X['FullBath'] + 0.5*X['BsmtHalfBath'] + 0.5*X['HalfBath']
+        X['RemodSum']= X['YearRemodAdd'] + X['YearBuilt']
+        X['Bedrooms/RM']= X['BedroomAbvGr']/X['TotRmsAbvGrd']
         
         return X
+
+class OutlierPruner(BaseEstimator, TransformerMixin):
+    
+    def __init__(self,train_data): # no *args or **kargs
+        print('Dropping/modifying specific outliers')
+        self.bad_indices = [524,1299,1183,692]
+        self.train = train_data
+        
+    def fit(self, X, y=None):
+        return self # nothing else to do
+        
+    def transform(self, X, y=None):        
+        if self.train:
+            X = X[~X['Id'].isin(self.bad_indices)]
+            return X
+        else:
+            X.loc[2549,('GrLivArea')]  = X['GrLivArea'].median()
+            X.loc[2549,('LotArea')]  = X['LotArea'].median()
+
+class PriceSplitter(BaseEstimator, TransformerMixin):
+    
+    def __init__(self,train_data): # no *args or **kargs
+        print('Separating price data and dropping indices')
+        self.train = train_data
+        
+    def fit(self, X, y=None):
+        return self # nothing else to do
+        
+    def transform(self, X, y=None):  
+        import numpy as np
+        if self.train:
+            prices = np.log1p(X['SalePrice'])
+            X = X.drop(['SalePrice'],axis = 1)
+            X = X.drop(['Id'],axis = 1)
+            return X, prices
+        
+        else:
+            X = X.drop(['Id'],axis = 1)
+            return X
+            
+
+
+
 
 import pandas as pd
 file_path = 'train_fix.csv'
 raw_df = pd.read_csv(file_path)
-cat_enc = CategoricalTransformer()
+
+FP = FeaturePruner()
+CE = CategoricalTransformer()
 CI = CustomImputer()
-
-
-# print(raw_df.dtypes)
-
+OT = OrdinalTransformer()
+FC = FeatureCreator()
+OP = OutlierPruner(train_data=True)
+PS = PriceSplitter(train_data=True)
 
 
     
 
 X = CI.fit_transform(raw_df)
-X = cat_enc.fit_transform(X)
+X = CE.fit_transform(X)
+X = OT.fit_transform(X)
+X = FP.fit_transform(X)
+X = FC.fit_transform(X)
+X = OP.fit_transform(X)
+X,prices = PS.fit_transform(X)
+
+
 print(X.head(10))
+print(prices.head(10))
