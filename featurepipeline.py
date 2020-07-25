@@ -203,6 +203,7 @@ class OutlierPruner(BaseEstimator, TransformerMixin):
         else:
             X.loc[2549,('GrLivArea')]  = X['GrLivArea'].median()
             X.loc[2549,('LotArea')]  = X['LotArea'].median()
+            return X
 
 class PriceSplitter(BaseEstimator, TransformerMixin):
     
@@ -227,6 +228,33 @@ class PriceSplitter(BaseEstimator, TransformerMixin):
             
 
 
+class FeatureSelector(BaseEstimator, TransformerMixin):
+    
+    def __init__(self,train_data,corr_val,features=None): # no *args or **kargs
+        print('Selecting top features based on abs. corr_coff >',corr_val)
+        self.train = train_data
+        self.corr_val =corr_val
+        self.feature_list= features
+        
+    def fit(self, X, y=None):
+        return self # nothing else to do
+        
+    def transform(self, X, y=None):  
+        import pandas as pd
+        
+        if self.train:
+            corrmatrix = X.corr('pearson')
+            cor_target = abs(corrmatrix["SalePrice"])
+            #Selecting correlated features
+            val = self.corr_val
+            relevant_features = cor_target[cor_target>val]
+            feature_select = relevant_features.index.to_list()
+            # feature_select.remove('SalePrice')
+            feature_select.append('Id')
+            return X[feature_select], feature_select
+        
+        else:
+            return X[self.feature_list]
 
 
 import pandas as pd
@@ -241,6 +269,7 @@ FC = FeatureCreator()
 OP = OutlierPruner(train_data=True)
 PS = PriceSplitter(train_data=True)
 
+FS = FeatureSelector(train_data=True, corr_val = 0.3)
 
     
 
@@ -250,8 +279,12 @@ X = OT.fit_transform(X)
 X = FP.fit_transform(X)
 X = FC.fit_transform(X)
 X = OP.fit_transform(X)
+X,feature_select = FS.fit_transform(X)
+
 X,prices = PS.fit_transform(X)
+
 
 
 print(X.head(10))
 print(prices.head(10))
+# print(feature_select)
