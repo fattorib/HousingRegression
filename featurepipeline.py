@@ -3,7 +3,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 class CustomImputer(BaseEstimator, TransformerMixin):
     def __init__(self):
-        print('Custom imputer class. Numerical variables imputed with 0, other imputed with mode')
+        print('Feature Pipeline!')
     def fit(self, X, y=None):
         return self # nothing else to do
     def transform(self, X, y=None):
@@ -88,7 +88,7 @@ class CategoricalTransformer(BaseEstimator, TransformerMixin):
                   self.PavedDrive_dict,self.SaleType_dict,self.SaleCondition_dict]
         
         self.list_keys = list(zip(self.cat_list,self.all_dict))
-        print('Using custom categorical transformer method')
+        # print('Using custom categorical transformer method')
         
     def fit(self, X, y=None):
         return self # nothing else to do
@@ -157,7 +157,7 @@ class FeaturePruner(BaseEstimator, TransformerMixin):
                                  'Fence','FireplaceQu','YrSold','MoSold',
                                  'MiscVal','GarageType']
 
-        print('Dropping features')
+        # print('Dropping features')
 
         
     def fit(self, X, y=None):
@@ -171,9 +171,8 @@ class FeaturePruner(BaseEstimator, TransformerMixin):
 class FeatureCreator(BaseEstimator, TransformerMixin):
     
     def __init__(self): # no *args or **kargs
-        print('Creating new features')
+        print('Feature Pipeline!')
 
-        
     def fit(self, X, y=None):
         return self # nothing else to do
         
@@ -189,7 +188,7 @@ class FeatureCreator(BaseEstimator, TransformerMixin):
 class OutlierPruner(BaseEstimator, TransformerMixin):
     
     def __init__(self,train_data): # no *args or **kargs
-        print('Dropping/modifying specific outliers')
+        # print('Dropping/modifying specific outliers')
         self.bad_indices = [524,1299,1183,692]
         self.train = train_data
         
@@ -201,14 +200,14 @@ class OutlierPruner(BaseEstimator, TransformerMixin):
             X = X[~X['Id'].isin(self.bad_indices)]
             return X
         else:
-            X.loc[2549,('GrLivArea')]  = X['GrLivArea'].median()
-            X.loc[2549,('LotArea')]  = X['LotArea'].median()
+            #We aren't dealing with the test set outlier
             return X
-
+        
+        
 class PriceSplitter(BaseEstimator, TransformerMixin):
     
     def __init__(self,train_data): # no *args or **kargs
-        print('Separating price data and dropping indices')
+        # print('Separating price data and dropping indices')
         self.train = train_data
         
     def fit(self, X, y=None):
@@ -232,7 +231,7 @@ class PriceSplitter(BaseEstimator, TransformerMixin):
 class FeatureSelector(BaseEstimator, TransformerMixin):
     
     def __init__(self,train_data,corr_val,features=None): # no *args or **kargs
-        print('Selecting top features based on abs. corr_coff >',corr_val)
+        # print('Selecting top features based on abs. corr_coff >',corr_val)
         self.train = train_data
         self.corr_val =corr_val
         self.feature_list= features
@@ -244,7 +243,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         import pandas as pd
         
         if self.train:
-            corrmatrix = X.corr('pearson')
+            corrmatrix = X.corr('spearman')
             cor_target = abs(corrmatrix["SalePrice"])
             #Selecting correlated features
             val = self.corr_val
@@ -261,7 +260,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 class FeatureTransformer(BaseEstimator, TransformerMixin):
     
     def __init__(self): # no *args or **kargs
-        print('Applying x-> log(x+1) transformation to all numerical variables')
+        # print('Applying x-> log(x+1) transformation to all numerical variables')
         self.numerical_features = numerical_features = ['LotFrontage','LotArea','MasVnrArea','BsmtFinSF1',
                       'BsmtFinSF2','BsmtUnfSF','TotalBsmtSF','1stFlrSF','2ndFlrSF','LowQualFinSF','GrLivArea',
                       'BsmtFullBath','BsmtHalfBath','FullBath','HalfBath','BedroomAbvGr','KitchenAbvGr',
