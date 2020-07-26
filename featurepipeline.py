@@ -223,8 +223,9 @@ class PriceSplitter(BaseEstimator, TransformerMixin):
             return X, prices
         
         else:
+            Id_df = X['Id']
             X = X.drop(['Id'],axis = 1)
-            return X
+            return X,Id_df
             
 
 
@@ -254,13 +255,40 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
             return X[feature_select], feature_select
         
         else:
+            self.feature_list.remove('SalePrice')
             return X[self.feature_list]
 
+class FeatureTransformer(BaseEstimator, TransformerMixin):
+    
+    def __init__(self): # no *args or **kargs
+        print('Applying x-> log(x+1) transformation to all numerical variables')
+        self.numerical_features = numerical_features = ['LotFrontage','LotArea','MasVnrArea','BsmtFinSF1',
+                      'BsmtFinSF2','BsmtUnfSF','TotalBsmtSF','1stFlrSF','2ndFlrSF','LowQualFinSF','GrLivArea',
+                      'BsmtFullBath','BsmtHalfBath','FullBath','HalfBath','BedroomAbvGr','KitchenAbvGr',
+                      'TotRmsAbvGrd','Fireplaces','GarageCars','GarageArea','WoodDeckSF','OpenPorchSF',
+                      'EnclosedPorch','3SsnPorch','ScreenPorch','PoolArea','TotalSF','PorchSF','TotalBath','RemodSum',
+                     'Bedrooms/RM']
+        
+    def fit(self, X, y=None):
+        return self # nothing else to do
+        
+    def transform(self, X, y=None):  
+        import numpy as np
+        import pandas as pd
+        feature_select = X.columns.to_list()
+        numerical_selected = list(set(self.numerical_features) & set(feature_select))
+        for feat in numerical_selected:
+            X[feat] = np.log1p(X[feat])
+        return X
 
+
+
+'''
 import pandas as pd
-file_path = 'train_fix.csv'
-raw_df = pd.read_csv(file_path)
 
+#Loading training data
+file_path = 'train_fix.csv'
+raw_train = pd.read_csv(file_path)
 FP = FeaturePruner()
 CE = CategoricalTransformer()
 CI = CustomImputer()
@@ -268,12 +296,11 @@ OT = OrdinalTransformer()
 FC = FeatureCreator()
 OP = OutlierPruner(train_data=True)
 PS = PriceSplitter(train_data=True)
-
 FS = FeatureSelector(train_data=True, corr_val = 0.3)
 
-    
+FT = FeatureTransformer()
 
-X = CI.fit_transform(raw_df)
+X = CI.fit_transform(raw_train)
 X = CE.fit_transform(X)
 X = OT.fit_transform(X)
 X = FP.fit_transform(X)
@@ -283,8 +310,38 @@ X,feature_select = FS.fit_transform(X)
 
 X,prices = PS.fit_transform(X)
 
+X= FT.fit_transform(X)
 
+
+
+
+#Loading test data
+file_path = 'test_fix.csv'
+raw_test = pd.read_csv(file_path)
+FP = FeaturePruner()
+CE = CategoricalTransformer()
+CI = CustomImputer()
+OT = OrdinalTransformer()
+FC = FeatureCreator()
+OP = OutlierPruner(train_data=False)
+PS = PriceSplitter(train_data=False)
+FS = FeatureSelector(train_data=False, corr_val = 0.3, features=feature_select)
+FT = FeatureTransformer()
+
+X = CI.fit_transform(raw_test)
+X = CE.fit_transform(X)
+X = OT.fit_transform(X)
+X = FP.fit_transform(X)
+X = FC.fit_transform(X)
+X = OP.fit_transform(X)
+X = FS.fit_transform(X)
+
+
+X,Id_df = PS.fit_transform(X)
+
+X= FT.fit_transform(X)
 
 print(X.head(10))
-print(prices.head(10))
-# print(feature_select)
+'''
+
+
