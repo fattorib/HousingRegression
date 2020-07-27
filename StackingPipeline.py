@@ -118,7 +118,10 @@ model_scorer(rf)
 
 
 # Finding optimal param for Random Forest
-gb = GradientBoostingRegressor(max_depth = 5, n_estimators = 500, learning_rate = 0.01)
+params_gb = {'criterion': 'mse', 'learning_rate': 0.1, 'loss': 'ls', 'max_depth': 3, 'min_samples_split': 4, 'n_estimators': 300}
+gb = GradientBoostingRegressor()
+gb.set_params(**params_gb)
+# print(gb.get_params)
 # #Evaluating 
 # gb.fit(X_train, y_train)
 model_scorer(gb)
@@ -127,8 +130,32 @@ submission_creator(gb,'_gb')
 
 
 
+# rf = RandomForestRegressor(criterion = 'mse', n_estimators = 200, min_samples_split=4, max_features= 'sqrt')
+# # #Evaluating 
+# # gb.fit(X_train, y_train)
+# model_scorer(rf)
+# rf.fit(X_train, y_train)
+# submission_creator(rf,'_rf')
 
 
+
+
+from sklearn.ensemble import StackingRegressor
+from sklearn.linear_model import Lasso
+from sklearn.linear_model import Ridge
+
+
+estimators = [
+    ('ridge', Ridge(alpha = 0.66)),
+    ('lasso', Lasso(alpha = 0.0001)),
+    ('gbdt',GradientBoostingRegressor(criterion = 'mse',max_depth = 3, n_estimators = 300, learning_rate = 0.1,min_samples_split=4))
+     ]
+    
+    
+reg = StackingRegressor(estimators=estimators)
+
+reg.fit(X_train, y_train)
+submission_creator(reg,'_GBRidgeLassoStack')
 
 
 

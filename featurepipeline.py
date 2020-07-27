@@ -259,14 +259,23 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
 class FeatureTransformer(BaseEstimator, TransformerMixin):
     
-    def __init__(self): # no *args or **kargs
+    def __init__(self,trans): # no *args or **kargs
         # print('Applying x-> log(x+1) transformation to all numerical variables')
-        self.numerical_features = numerical_features = ['LotFrontage','LotArea','MasVnrArea','BsmtFinSF1',
+        self.numerical_features = ['LotFrontage','LotArea','MasVnrArea','BsmtFinSF1',
                       'BsmtFinSF2','BsmtUnfSF','TotalBsmtSF','1stFlrSF','2ndFlrSF','LowQualFinSF','GrLivArea',
                       'BsmtFullBath','BsmtHalfBath','FullBath','HalfBath','BedroomAbvGr','KitchenAbvGr',
                       'TotRmsAbvGrd','Fireplaces','GarageCars','GarageArea','WoodDeckSF','OpenPorchSF',
                       'EnclosedPorch','3SsnPorch','ScreenPorch','PoolArea','TotalSF','PorchSF','TotalBath','RemodSum',
                      'Bedrooms/RM']
+        
+        self.skew_features = ['LotArea','LowQualFinSF',
+                              'KitchenAbvGr','BsmtFinSF2','BsmtHalfBath','ScreenPorch',
+                              'EnclosedPorch','MasVnrArea','OpenPorchSF','WoodDeckSF',
+                              'PorchSF','BsmtUnfSF','1stFlrSF','GrLivArea','2ndFlrSF',
+                              'BsmtFinSF1','TotalSF','TotRmsAbvGrd'
+                        ]
+        self.trans = trans
+    
         
     def fit(self, X, y=None):
         return self # nothing else to do
@@ -274,11 +283,26 @@ class FeatureTransformer(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):  
         import numpy as np
         import pandas as pd
-        feature_select = X.columns.to_list()
-        numerical_selected = list(set(self.numerical_features) & set(feature_select))
-        for feat in numerical_selected:
-            X[feat] = np.log1p(X[feat])
-        return X
+        
+        #Code for log1p transform
+        if self.trans == 'log':
+            feature_select = X.columns.to_list()
+            numerical_selected = list(set(self.numerical_features) & set(feature_select))
+            for feat in numerical_selected:
+                X[feat] = np.log1p(X[feat])     
+            return X        
+        
+        elif self.trans == 'box':
+            #Code for boxcox transform
+            from scipy.special import boxcox1p
+            feature_select = X.columns.to_list()
+            skewed_selected = list(set(self.skew_features) & set(feature_select))
+            for feat in skewed_selected:
+                X[feat] = boxcox1p(X[feat], 0.15)
+            return X
+            
+            
+        
 
 
 
@@ -305,6 +329,31 @@ X = OT.fit_transform(X)
 X = FP.fit_transform(X)
 X = FC.fit_transform(X)
 X = OP.fit_transform(X)
+
+
+
+
+from scipy.stats import norm, skew
+numerical_features = ['LotFrontage','LotArea','MasVnrArea','BsmtFinSF1',
+                      'BsmtFinSF2','BsmtUnfSF','TotalBsmtSF','1stFlrSF','2ndFlrSF','LowQualFinSF','GrLivArea',
+                      'BsmtFullBath','BsmtHalfBath','FullBath','HalfBath','BedroomAbvGr','KitchenAbvGr',
+                      'TotRmsAbvGrd','Fireplaces','GarageCars','GarageArea','WoodDeckSF','OpenPorchSF',
+                      'EnclosedPorch','3SsnPorch','ScreenPorch','PoolArea','TotalSF','PorchSF','TotalBath','RemodSum',
+                     'Bedrooms/RM']
+
+
+# Check the skew of all numerical features
+skewed_feats = X[numerical_features].apply(lambda x: skew(x.dropna())).sort_values(ascending=False)
+print("\nSkew in numerical features: \n")
+skewness = pd.DataFrame({'Skew' :skewed_feats})
+skewness.head(10)
+
+skewness = skewness[abs(skewness) > 0.70]
+print("There are {} skewed numerical features to Box Cox transform".format(skewness.shape[0]))
+print(skewness.head(30))
+
+
+
 X,feature_select = FS.fit_transform(X)
 
 X,prices = PS.fit_transform(X)

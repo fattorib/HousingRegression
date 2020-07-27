@@ -98,39 +98,53 @@ def model_scorer(model):
     display_scores(rmse_scores)
 
 
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import Lasso
+from sklearn.linear_model import Ridge
+from sklearn.linear_model import ElasticNet
 
 from sklearn.model_selection import GridSearchCV
 
 
-'''
-# Finding optimal param for Random Forest
-rf = RandomForestRegressor(n_jobs = -1)
-params= {"criterion":['mae','mse'],"min_samples_split":[1,2,4], "max_features": ['auto', 'sqrt', 'log2'],"n_estimators": [100,200,400,800]}
-rf_grid = GridSearchCV(rf, param_grid=params, scoring = 'neg_root_mean_squared_error', cv=5,n_jobs=-1)
+params= {"alpha": np.linspace(1e-9,1,50)}
+
+
+lr_lasso = Lasso(max_iter=10000)
+lasso_grid = GridSearchCV(lr_lasso, param_grid=params, scoring = 'neg_root_mean_squared_error', cv=5,n_jobs=-1)
 # #Evaluating 
-rf_grid.fit(X_train, y_train)
-print(rf_grid.best_params_)
-rf.set_params(**rf_grid.best_params_)
-model_scorer(rf)
-'''
+lasso_grid.fit(X_train, y_train)
+print(lasso_grid.best_params_)
+lr_lasso.set_params(**lasso_grid.best_params_)
+model_scorer(lr_lasso)
+lr_lasso.fit(X_train, y_train)
+submission_creator(lr_lasso,'_lasso')
 
 
-# Finding optimal param for Random Forest
-gb = GradientBoostingRegressor(max_depth = 5, n_estimators = 500, learning_rate = 0.01)
+
+lr_ridge = Ridge(max_iter=10000)
+ridge_grid = GridSearchCV(lr_ridge, param_grid=params, scoring = 'neg_root_mean_squared_error', cv=5,n_jobs=-1)
 # #Evaluating 
-# gb.fit(X_train, y_train)
-model_scorer(gb)
-gb.fit(X_train, y_train)
-submission_creator(gb,'_gb')
+ridge_grid.fit(X_train, y_train)
+print(ridge_grid.best_params_)
+lr_ridge.set_params(**ridge_grid.best_params_)
+model_scorer(lr_ridge)
+lr_ridge.fit(X_train, y_train)
+submission_creator(lr_ridge,'_ridge')
 
 
 
-
-
-
-
+'''
+params= {"alpha": np.linspace(1e-8,1,10), "l1_ratio": np.linspace(1e-8,1,10)}
+lr_elastic = ElasticNet(max_iter=10000)
+elastic_grid = GridSearchCV(lr_elastic, param_grid=params, scoring = 'neg_root_mean_squared_error', cv=5,n_jobs=-1)
+# #Evaluating 
+elastic_grid.fit(X_train, y_train)
+print(elastic_grid.best_params_)
+lr_elastic.set_params(**elastic_grid.best_params_)
+model_scorer(lr_elastic)
+lr_elastic.fit(X_train, y_train)
+submission_creator(lr_ridge,'_elastic')
+'''
 
 
 
