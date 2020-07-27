@@ -55,6 +55,7 @@ file_path = 'test_fix.csv'
 raw_test = pd.read_csv(file_path)
 X_submission_data = numerical_pipeline.fit_transform(raw_test)
 
+
 OP = OutlierPruner(train_data=False)
 PS = PriceSplitter(train_data=False)
 FS = FeatureSelector(train_data=False, corr_val = 0.0, features=feature_select)
@@ -146,8 +147,7 @@ from sklearn.linear_model import Ridge
 
 
 estimators = [
-    ('ridge', Ridge(alpha = 0.66)),
-    ('lasso', Lasso(alpha = 0.0001)),
+    ('lasso', Lasso(alpha = 0.0003,max_iter=10000)),
     ('gbdt',GradientBoostingRegressor(criterion = 'mse',max_depth = 3, n_estimators = 300, learning_rate = 0.1,min_samples_split=4))
      ]
     
@@ -155,7 +155,7 @@ estimators = [
 reg = StackingRegressor(estimators=estimators)
 
 reg.fit(X_train, y_train)
-submission_creator(reg,'_GBRidgeLassoStack')
+submission_creator(reg,'_GBLassoStack')
 
 
 

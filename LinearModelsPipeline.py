@@ -106,7 +106,7 @@ from sklearn.linear_model import ElasticNet
 from sklearn.model_selection import GridSearchCV
 
 
-params= {"alpha": np.linspace(1e-9,1,50)}
+params= {"alpha": np.linspace(5e-4,1,50)}
 
 
 lr_lasso = Lasso(max_iter=10000)
@@ -133,8 +133,8 @@ submission_creator(lr_ridge,'_ridge')
 
 
 
-'''
-params= {"alpha": np.linspace(1e-8,1,10), "l1_ratio": np.linspace(1e-8,1,10)}
+
+params= {"alpha": np.linspace(1e-4,1,10), "l1_ratio": np.linspace(1e-4,1,10)}
 lr_elastic = ElasticNet(max_iter=10000)
 elastic_grid = GridSearchCV(lr_elastic, param_grid=params, scoring = 'neg_root_mean_squared_error', cv=5,n_jobs=-1)
 # #Evaluating 
@@ -144,7 +144,7 @@ lr_elastic.set_params(**elastic_grid.best_params_)
 model_scorer(lr_elastic)
 lr_elastic.fit(X_train, y_train)
 submission_creator(lr_ridge,'_elastic')
-'''
+
 
 
 
