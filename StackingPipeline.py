@@ -50,6 +50,7 @@ X_train = MM.fit_transform(X_train)
 
 
 
+
 #Loading test data
 file_path = 'test_fix.csv'
 raw_test = pd.read_csv(file_path)
@@ -119,7 +120,7 @@ model_scorer(rf)
 
 
 # Finding optimal param for Random Forest
-params_gb = {'criterion': 'mse', 'learning_rate': 0.1, 'loss': 'ls', 'max_depth': 3, 'min_samples_split': 4, 'n_estimators': 300}
+params_gb = {'criterion': 'mse', 'learning_rate': 0.05, 'loss': 'ls', 'max_depth': 3, 'min_samples_split': 4, 'n_estimators': 300}
 gb = GradientBoostingRegressor()
 gb.set_params(**params_gb)
 # print(gb.get_params)
@@ -139,6 +140,21 @@ submission_creator(gb,'_gb')
 # submission_creator(rf,'_rf')
 
 
+import xgboost as xgb
+
+# params = {"objective":"reg:linear",'colsample_bytree': 0.3,'learning_rate': 0.1,
+#                 'max_depth': 5, 'alpha': 10}
+XGB_reg = xgb.XGBRegressor(eval_metric = 'rmse',silent = True)
+
+
+params_XGB = {'eta': 0.03, 'max_depth': 3, 'n_estimators': 800,'reg_alpha': 0.001, 'colsample_bytree': 0.6, 'reg_lambda': 0.001, 'subsample': 0.6}
+XGB_reg.set_params(**params_XGB)
+model_scorer(XGB_reg)
+
+XGB_reg.fit(X_train,y_train)
+
+submission_creator(XGB_reg,'_xgb')
+
 
 
 from sklearn.ensemble import StackingRegressor
@@ -146,16 +162,22 @@ from sklearn.linear_model import Lasso
 from sklearn.linear_model import Ridge
 
 
+import xgboost as xgb
+xgb_reg = xgb.XGBRegressor(eval_metric = 'rmse',eta = 0.3, max_depth = 3, n_estimators= 800)
+
+
 estimators = [
     ('lasso', Lasso(alpha = 0.0003,max_iter=10000)),
-    ('gbdt',GradientBoostingRegressor(criterion = 'mse',max_depth = 3, n_estimators = 300, learning_rate = 0.1,min_samples_split=4))
+    ('xgb',xgb.XGBRegressor(eval_metric = 'rmse',eta = 0.3, max_depth = 3, 
+                            n_estimators= 800, reg_alpha = 0.001, 
+                            reg_lambda=0.001,colsample_bytree=0.6,subsample=0.6,silent = True))
      ]
     
     
 reg = StackingRegressor(estimators=estimators)
 
 reg.fit(X_train, y_train)
-submission_creator(reg,'_GBLassoStack')
+submission_creator(reg,'_XGBLassoStack')
 
 
 

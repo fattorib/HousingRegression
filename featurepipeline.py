@@ -183,6 +183,18 @@ class FeatureCreator(BaseEstimator, TransformerMixin):
         X['RemodSum']= X['YearRemodAdd'] + X['YearBuilt']
         X['Bedrooms/RM']= X['BedroomAbvGr']/X['TotRmsAbvGrd']
         
+        X['OverallCombined'] = X['OverallQual']+X['OverallCond']
+
+        X['ExterCombined'] = X['ExterQual']+X['ExterCond']
+        
+        X = X.drop(['TotalBsmtSF','1stFlrSF','2ndFlrSF'],axis = 1)
+        X = X.drop(['OpenPorchSF','3SsnPorch','EnclosedPorch','ScreenPorch','WoodDeckSF'],axis = 1)
+        X = X.drop(['BsmtFullBath','FullBath','BsmtHalfBath','HalfBath'],axis = 1)
+        
+        X = X.drop(['OverallQual','OverallCond','ExterQual','ExterCond'],axis = 1)
+        
+        
+        
         return X
 
 class OutlierPruner(BaseEstimator, TransformerMixin):
@@ -274,6 +286,16 @@ class FeatureTransformer(BaseEstimator, TransformerMixin):
                               'PorchSF','BsmtUnfSF','1stFlrSF','GrLivArea','2ndFlrSF',
                               'BsmtFinSF1','TotalSF','TotRmsAbvGrd'
                         ]
+        
+        self.skew_features_nodrops = ['LotArea','LowQualFinSF',
+                              'KitchenAbvGr','BsmtFinSF2','BsmtHalfBath','ScreenPorch',
+                              'EnclosedPorch','MasVnrArea','OpenPorchSF','WoodDeckSF',
+                              'PorchSF','BsmtUnfSF','1stFlrSF','GrLivArea','2ndFlrSF',
+                              'BsmtFinSF1','TotalSF','TotRmsAbvGrd'
+                        ]
+        
+        
+        
         self.trans = trans
     
         
@@ -298,7 +320,7 @@ class FeatureTransformer(BaseEstimator, TransformerMixin):
             feature_select = X.columns.to_list()
             skewed_selected = list(set(self.skew_features) & set(feature_select))
             for feat in skewed_selected:
-                X[feat] = boxcox1p(X[feat], 0.15)
+                X[feat] = boxcox1p(X[feat], 0.20)
             return X
             
             

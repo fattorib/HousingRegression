@@ -48,12 +48,14 @@ X_train= FT.fit_transform(X_train)
 X_train = MM.fit_transform(X_train)
 
 
+print("We are using a total of",len(feature_select),"features.")
 
 
 #Loading test data
 file_path = 'test_fix.csv'
 raw_test = pd.read_csv(file_path)
 X_submission_data = numerical_pipeline.fit_transform(raw_test)
+
 
 OP = OutlierPruner(train_data=False)
 PS = PriceSplitter(train_data=False)
@@ -94,56 +96,33 @@ from sklearn.model_selection import cross_val_score
 def model_scorer(model):
     scores = cross_val_score(model, X_train, y_train,
     scoring="neg_mean_squared_error", cv=5)
+    
     rmse_scores = np.sqrt(-scores)
     display_scores(rmse_scores)
+    
+    
+    
+import xgboost as xgb
+
+# params = {"objective":"reg:linear",'colsample_bytree': 0.3,'learning_rate': 0.1,
+#                 'max_depth': 5, 'alpha': 10}
+XGB_reg = xgb.XGBRegressor(eval_metric = 'rmse',silent = True)
 
 
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import Lasso
-from sklearn.linear_model import Ridge
-from sklearn.linear_model import ElasticNet
+params_XGB = {'eta': 0.03, 'max_depth': 3, 'n_estimators': 800,'alpha': 0.001, 'colsample_bytree': 0.6, 'lambda': 0.001, 'subsample': 0.6}
+XGB_reg.set_params(**params_XGB)
+model_scorer(XGB_reg)
 
-from sklearn.model_selection import GridSearchCV
+XGB_reg.fit(X_train,y_train)
 
-
-params= {"alpha": np.linspace(3e-4,1,50)}
-
-
-lr_lasso = Lasso(max_iter=10000)
-lasso_grid = GridSearchCV(lr_lasso, param_grid=params, scoring = 'neg_root_mean_squared_error', cv=5,n_jobs=-1)
-# #Evaluating 
-lasso_grid.fit(X_train, y_train)
-print(lasso_grid.best_params_)
-lr_lasso.set_params(**lasso_grid.best_params_)
-model_scorer(lr_lasso)
-lr_lasso.fit(X_train, y_train)
-submission_creator(lr_lasso,'_lasso')
-
-
-
-lr_ridge = Ridge(max_iter=10000)
-ridge_grid = GridSearchCV(lr_ridge, param_grid=params, scoring = 'neg_root_mean_squared_error', cv=5,n_jobs=-1)
-# #Evaluating 
-ridge_grid.fit(X_train, y_train)
-print(ridge_grid.best_params_)
-lr_ridge.set_params(**ridge_grid.best_params_)
-model_scorer(lr_ridge)
-lr_ridge.fit(X_train, y_train)
-submission_creator(lr_ridge,'_ridge')
+submission_creator(XGB_reg,'_xgb')
 
 
 
 
-# params= {"alpha": np.linspace(1e-4,1,10), "l1_ratio": np.linspace(1e-4,1,10)}
-# lr_elastic = ElasticNet(max_iter=10000)
-# elastic_grid = GridSearchCV(lr_elastic, param_grid=params, scoring = 'neg_root_mean_squared_error', cv=5,n_jobs=-1)
-# # #Evaluating 
-# elastic_grid.fit(X_train, y_train)
-# print(elastic_grid.best_params_)
-# lr_elastic.set_params(**elastic_grid.best_params_)
-# model_scorer(lr_elastic)
-# lr_elastic.fit(X_train, y_train)
-# submission_creator(lr_ridge,'_elastic')
+
+
+
 
 
 
