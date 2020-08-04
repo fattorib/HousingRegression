@@ -7,13 +7,64 @@ class CustomImputer(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self # nothing else to do
     def transform(self, X, y=None):
-        missing = X.isnull().sum().sort_values(ascending=False)
-        missing_features = missing.index.to_list()
-        for feature in missing_features:
-            if X[feature].dtypes == object or X[feature].dtypes==str :
-                X[feature] = X[feature].fillna(X[feature].mode()[0])               
-            else:
-                X[feature] = X[feature].fillna(0)  
+
+        neighbourhood_grouped_feat = ['Electrical', 'KitchenQual', 'Exterior1st', 
+                                'Exterior2nd', 'Functional', 'MSZoning', 
+                                'SaleType', 'Utilities']
+        
+        # for feature in neighbourhood_grouped_feat:
+            # X[feature] = X.groupby(['Neighborhood', 'MSSubClass'])[feature].apply(lambda c: c.fillna(c.value_counts().index[0]))
+           
+        X['Electrical'] = X.groupby('Neighborhood')['Electrical'].transform(lambda x: x.fillna(x.mode()[0]))
+        X['KitchenQual'] = X.groupby('Neighborhood')['KitchenQual'].transform(lambda x: x.fillna(x.mode()[0]))
+        X['Exterior1st'] = X.groupby('Neighborhood')['Exterior1st'].transform(lambda x: x.fillna(x.mode()[0]))
+        X['Exterior2nd'] = X.groupby('Neighborhood')['Exterior2nd'].transform(lambda x: x.fillna(x.mode()[0]))
+        X['Functional'] = X.groupby('Neighborhood')['Functional'].transform(lambda x: x.fillna(x.mode()[0]))
+        X['MSZoning'] = X.groupby('Neighborhood')['MSZoning'].transform(lambda x: x.fillna(x.mode()[0]))
+        X['SaleType'] = X.groupby('Neighborhood')['SaleType'].transform(lambda x: x.fillna(x.mode()[0]))
+        X['Utilities'] = X.groupby('Neighborhood')['Utilities'].transform(lambda x: x.fillna(x.mode()[0]))
+        
+        #Fill thse columns with 'None'
+
+        general_missing_NA= ['FireplaceQu','PoolQC','Fence','MiscFeature',
+                             'Alley']
+        
+        for feature in general_missing_NA:
+            X[feature] = X[feature].fillna('NA')
+        
+        basement_missing_zero = ['BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF',
+                                 'TotalBsmtSF', 'BsmtFullBath', 'BsmtHalfBath']
+        
+        for feature in basement_missing_zero:
+            X[feature] = X[feature].fillna(0)
+        
+        
+        basement_missing_none = ['BsmtQual', 'BsmtCond', 'BsmtExposure', 
+                                 'BsmtFinType1', 'BsmtFinType2']
+        
+        for feature in basement_missing_none:
+            X[feature] = X[feature].fillna('NA')
+        
+        
+        garage_missing_zero = ['GarageYrBlt', 'GarageArea', 'GarageCars']
+        
+        for feature in garage_missing_zero:
+            X[feature] = X[feature].fillna(0)
+        
+        garage_missing_none = ['GarageType', 'GarageFinish', 'GarageQual', 
+                               'GarageCond']
+        
+        for feature in garage_missing_none:
+            X[feature] = X[feature].fillna('NA')
+        
+        
+        
+        
+        X['MasVnrType'] = X['MasVnrType'].fillna('None')
+        X['MasVnrArea'] = X['MasVnrArea'].fillna(0)
+        
+        X["LotFrontage"] = X.groupby("Neighborhood")["LotFrontage"].transform(lambda x: x.fillna(x.median()))
+        
         return X   
         
         
@@ -21,13 +72,16 @@ class CustomImputer(BaseEstimator, TransformerMixin):
 class CategoricalTransformer(BaseEstimator, TransformerMixin):
     
     def __init__(self): # no *args or **kargs
-        self.cat_list = ['MSZoning','Street','LotShape','LandContour','Utilities',
+        self.cat_list = ['GarageType','Alley','MSZoning','Street','LotShape','LandContour','Utilities',
                         'LotConfig','LandSlope','Neighborhood','Condition1','Condition2','BldgType',
                         'HouseStyle','RoofStyle','RoofMatl','Exterior1st','Exterior2nd','MasVnrType',
                         'Foundation','Heating','Electrical','CentralAir','PavedDrive','SaleType',
                         'SaleCondition']
         
-
+        self.Garage_dict = ['2Types','Attchd','Basment','BuiltIn','CarPort','Detchd','NA']
+        
+        self.alley_dict = ['Grvl','Pave','NA']
+        
         self.MSZoning_dict=['A','C','FV','I','RH','RL','RP','RM','C (all)']
         
         self.Street_dict=['Grvl','Pave']
@@ -54,7 +108,7 @@ class CategoricalTransformer(BaseEstimator, TransformerMixin):
         
         self.BldgType_dict=['1Fam','2fmCon','Duplex','Twnhs','TwnhsE','TwnhsI']
         
-        self. HouseStyle_dict=['1Story','1.5Fin','1.5Unf','2Story','2.5Fin','2.5Unf','SFoyer','SLvl']
+        self.HouseStyle_dict=['1Story','1.5Fin','1.5Unf','2Story','2.5Fin','2.5Unf','SFoyer','SLvl']
         
         self.RoofStyle_dict=['Flat','Gable','Gambrel','Hip','Mansard','Shed']
         
@@ -66,7 +120,7 @@ class CategoricalTransformer(BaseEstimator, TransformerMixin):
         self.Exterior2nd_dict=['AsbShng','AsphShn','BrkComm','BrkFace','CBlock','CemntBd','HdBoard','ImStucc',
                           'MetalSd','Other','Plywood','PreCast','Stone','Stucco','VinylSd','Wd Sdng','WdShing']
         
-        self. MasVnrType_dict=['BrkCmn','BrkFace','CBlock','None','Stone']
+        self.MasVnrType_dict=['BrkCmn','BrkFace','CBlock','None','Stone']
         
         self.Foundation_dict=['BrkTil','CBlock','PConc','Slab','Stone','Wood']
         
@@ -82,7 +136,7 @@ class CategoricalTransformer(BaseEstimator, TransformerMixin):
                          
         self.SaleCondition_dict=['Normal','Abnorml','AdjLand','Alloca','Family','Partial']
         
-        self.all_dict = [self.MSZoning_dict,self.Street_dict,self.LotShape_dict,self.LandContour_dict,self.Utilities_dict,self.LotConfig_dict,self.LandSlope_dict,
+        self.all_dict = [self.Garage_dict,self.alley_dict,self.MSZoning_dict,self.Street_dict,self.LotShape_dict,self.LandContour_dict,self.Utilities_dict,self.LotConfig_dict,self.LandSlope_dict,
                    self.Neighborhood_dict,self.Condition1_dict,self.Condition2_dict,self.BldgType_dict,self.HouseStyle_dict,self.RoofStyle_dict,self.RoofMatl_dict,
                    self.Exterior1st_dict,self.Exterior2nd_dict,self.MasVnrType_dict,self.Foundation_dict,self.Heating_dict,self.Electrical_dict,self.CentralAir_dict,
                   self.PavedDrive_dict,self.SaleType_dict,self.SaleCondition_dict]
@@ -133,8 +187,12 @@ class CategoricalTransformer(BaseEstimator, TransformerMixin):
 class OrdinalTransformer(BaseEstimator, TransformerMixin):
     
     def __init__(self): # no *args or **kargs
-        self.ordinal_features = ['YearBuilt','YearRemodAdd','OverallQual','OverallCond','ExterQual','ExterCond','BsmtQual','BsmtCond','BsmtExposure',
-                    'HeatingQC','KitchenQual','Functional','FireplaceQu','GarageQual','GarageCond','PoolQC']
+        self.ordinal_features = ['YearBuilt','YearRemodAdd','OverallQual',
+                                 'OverallCond','ExterQual','ExterCond',
+                                 'BsmtQual','BsmtCond','BsmtExposure',
+                    'HeatingQC','KitchenQual','Functional','FireplaceQu',
+                    'GarageQual','GarageCond','PoolQC','BsmtFinType1',
+                    'BsmtFinType2','Fence','GarageFinish']
         
     def fit(self, X, y=None):
         return self # nothing else to do
@@ -153,9 +211,9 @@ class OrdinalTransformer(BaseEstimator, TransformerMixin):
 class FeaturePruner(BaseEstimator, TransformerMixin):
     
     def __init__(self): # no *args or **kargs
-        self.features_to_drop = ['MSSubClass','PoolQC','MiscFeature','Alley',
-                                 'Fence','FireplaceQu','YrSold','MoSold',
-                                 'MiscVal','GarageType']
+        self.features_to_drop = ['MSSubClass',
+                                 'YrSold','MoSold','MiscFeature','PoolArea'
+                                 ]
 
         # print('Dropping features')
 
@@ -176,26 +234,64 @@ class FeatureCreator(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self # nothing else to do
         
-    def transform(self, X, y=None):        
+    def transform(self, X, y=None):    
+        import pandas as pd
         X['TotalSF'] = X['TotalBsmtSF'] + X['1stFlrSF'] + X['2ndFlrSF']
         X['PorchSF'] = X['OpenPorchSF'] + X['3SsnPorch'] + X['EnclosedPorch'] + X['ScreenPorch'] + X['WoodDeckSF']
         X['TotalBath'] = X['BsmtFullBath'] + X['FullBath'] + 0.5*X['BsmtHalfBath'] + 0.5*X['HalfBath']
         X['RemodSum']= X['YearRemodAdd'] + X['YearBuilt']
-        X['Bedrooms/RM']= X['BedroomAbvGr']/X['TotRmsAbvGrd']
+        # X['Bedrooms/RM']= X['BedroomAbvGr']/X['TotRmsAbvGrd']
         
         X['OverallCombined'] = X['OverallQual']+X['OverallCond']
 
         X['ExterCombined'] = X['ExterQual']+X['ExterCond']
         
-        X = X.drop(['TotalBsmtSF','1stFlrSF','2ndFlrSF'],axis = 1)
+        X['BasementCombined'] = X['BsmtQual']+X['BsmtCond']
+        
+        # X['HasPool'] = X['PoolArea'].apply(lambda x: 1 if x > 0 else 0)
+        # X['HasBsmt'] = X['TotalBsmtSF'].apply(lambda x: 1 if x > 0 else 0)
+        # X['HasSecondFloor'] = X['2ndFlrSF'].apply(lambda x: 1 if x > 0 else 0)
+        
+       
+        
+        
+        # X = X.drop(['TotalBsmtSF','1stFlrSF','2ndFlrSF'],axis = 1)
         X = X.drop(['OpenPorchSF','3SsnPorch','EnclosedPorch','ScreenPorch','WoodDeckSF'],axis = 1)
-        X = X.drop(['BsmtFullBath','FullBath','BsmtHalfBath','HalfBath'],axis = 1)
+        # X = X.drop(['BsmtFullBath','FullBath','BsmtHalfBath','HalfBath'],axis = 1)
         
-        X = X.drop(['OverallQual','OverallCond','ExterQual','ExterCond'],axis = 1)
-        
-        
-        
+        # X = X.drop(['OverallQual','OverallCond','ExterQual','ExterCond'],axis = 1)
+
         return X
+    
+
+class PolynomialFeatureCreator(BaseEstimator, TransformerMixin):
+    
+    def __init__(self): # no *args or **kargs
+        print('Feature Pipeline!')
+
+    def fit(self, X, y=None):
+        return self # nothing else to do
+        
+    def transform(self, X, y=None):    
+        import pandas as pd        
+        X_top10 = X[['TotalBath', 'TotalSF', 'OverallQual', 'RemodSum', 
+                    'GrLivArea', 'KitchenQual', 'TotRmsAbvGrd', 
+                    'GarageCars', 'GarageArea','PorchSF']]
+        
+        
+        from sklearn.preprocessing import PolynomialFeatures
+        poly = PolynomialFeatures(2)
+        
+        X_newfeat = poly.fit_transform(X_top10)
+        
+        poly_df = pd.DataFrame(X_newfeat)
+
+        X = pd.concat([X,poly_df],axis = 1)
+        
+    
+        return X
+    
+
 
 class OutlierPruner(BaseEstimator, TransformerMixin):
     
@@ -254,50 +350,88 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):  
         import pandas as pd
         
-        if self.train:
-            corrmatrix = X.corr('spearman')
-            cor_target = abs(corrmatrix["SalePrice"])
-            #Selecting correlated features
-            val = self.corr_val
-            relevant_features = cor_target[cor_target>val]
-            feature_select = relevant_features.index.to_list()
-            # feature_select.remove('SalePrice')
-            feature_select.append('Id')
-            return X[feature_select], feature_select
+        if self.corr_val == 0 and self.train:
+            return X, X.columns.to_list()
+        
+        elif self.corr_val == 0 and not self.train:
+            return X
         
         else:
-            self.feature_list.remove('SalePrice')
-            return X[self.feature_list]
+            if self.train:
+                corrmatrix = X.corr('spearman')
+                cor_target = abs(corrmatrix["SalePrice"])
+                #Selecting correlated features
+                val = self.corr_val
+                relevant_features = cor_target[cor_target>=val]
+                feature_select = relevant_features.index.to_list()
+                # feature_select.remove('SalePrice')
+                feature_select.append('Id')
+                return X[feature_select], feature_select
+            
+            
+            
+            else:
+                self.feature_list.remove('SalePrice')
+                return X[self.feature_list]
+        
+        
+class DropHighCorr(BaseEstimator, TransformerMixin):
+   
+   def __init__(self,train_data,threshold,features=None): # no *args or **kargs
+       # print('Selecting top features based on abs. corr_coff >',corr_val)
+       self.train = train_data
+       self.thresh = threshold
+       self.feature_list= features
+       
+   def fit(self, X, y=None):
+       return self # nothing else to do
+       
+   def transform(self, X, y=None):  
+       import pandas as pd
+       
+       import numpy as np
+       
+       if self.train:
+           feature_select = X.columns.to_list()
+           corr_matrix = X.corr('pearson').abs()
+           
+           upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
+           to_drop = [column for column in upper.columns if any(upper[column] > self.thresh)]
+           X = X.drop(X[to_drop], axis=1)
+           return X, X.columns.to_list()
+       
+       
+       
+       else:
+           return X[self.feature_list]       
+        
+        
+        
+        
+        
 
 class FeatureTransformer(BaseEstimator, TransformerMixin):
     
-    def __init__(self,trans): # no *args or **kargs
-        # print('Applying x-> log(x+1) transformation to all numerical variables')
-        self.numerical_features = ['LotFrontage','LotArea','MasVnrArea','BsmtFinSF1',
-                      'BsmtFinSF2','BsmtUnfSF','TotalBsmtSF','1stFlrSF','2ndFlrSF','LowQualFinSF','GrLivArea',
-                      'BsmtFullBath','BsmtHalfBath','FullBath','HalfBath','BedroomAbvGr','KitchenAbvGr',
-                      'TotRmsAbvGrd','Fireplaces','GarageCars','GarageArea','WoodDeckSF','OpenPorchSF',
-                      'EnclosedPorch','3SsnPorch','ScreenPorch','PoolArea','TotalSF','PorchSF','TotalBath','RemodSum',
-                     'Bedrooms/RM']
-        
-        self.skew_features = ['LotArea','LowQualFinSF',
-                              'KitchenAbvGr','BsmtFinSF2','BsmtHalfBath','ScreenPorch',
-                              'EnclosedPorch','MasVnrArea','OpenPorchSF','WoodDeckSF',
-                              'PorchSF','BsmtUnfSF','1stFlrSF','GrLivArea','2ndFlrSF',
-                              'BsmtFinSF1','TotalSF','TotRmsAbvGrd'
-                        ]
-        
-        self.skew_features_nodrops = ['LotArea','LowQualFinSF',
-                              'KitchenAbvGr','BsmtFinSF2','BsmtHalfBath','ScreenPorch',
-                              'EnclosedPorch','MasVnrArea','OpenPorchSF','WoodDeckSF',
-                              'PorchSF','BsmtUnfSF','1stFlrSF','GrLivArea','2ndFlrSF',
-                              'BsmtFinSF1','TotalSF','TotRmsAbvGrd'
-                        ]
+    def __init__(self): # no *args or **kargs
+        self.numerical_features = ['LotArea', '3SsnPorch', 'LowQualFinSF', 
+                                'KitchenAbvGr', 'BsmtFinSF2', 'BsmtHalfBath', 
+                                'ScreenPorch', 'EnclosedPorch', 'MasVnrArea', 
+                                'OpenPorchSF', 'WoodDeckSF', 'LotFrontage', 
+                                'PorchSF', 'BsmtUnfSF', '1stFlrSF', 'GrLivArea', 
+                                '2ndFlrSF', 'BsmtFinSF1', 'HalfBath', 
+                                'TotRmsAbvGrd', 'TotalSF', 'Fireplaces', 
+                                'BsmtFullBath']
         
         
+        self.further_skewed = ['3SsnPorch', 'LowQualFinSF', 'BsmtHalfBath',
+                     'KitchenAbvGr', 'ScreenPorch', 'BsmtFinSF2', 
+                     'EnclosedPorch', 'MasVnrArea', '2ndFlrSF', 'WoodDeckSF',
+                     'HalfBath', 'OpenPorchSF', 'BsmtFullBath', 'Fireplaces']
         
-        self.trans = trans
-    
+        self.special_skewed =['RemodSum','GarageCars','GarageArea']
+        
+        self.to_drop = ['3SsnPorch','LowQualFinSF','BsmtHalfBath','ScreenPorch',
+                        'BsmtFinSF2','EnclosedPorch']
         
     def fit(self, X, y=None):
         return self # nothing else to do
@@ -306,22 +440,30 @@ class FeatureTransformer(BaseEstimator, TransformerMixin):
         import numpy as np
         import pandas as pd
         
-        #Code for log1p transform
-        if self.trans == 'log':
-            feature_select = X.columns.to_list()
-            numerical_selected = list(set(self.numerical_features) & set(feature_select))
-            for feat in numerical_selected:
-                X[feat] = np.log1p(X[feat])     
-            return X        
+
+        from scipy.special import boxcox1p
+        from scipy.stats import boxcox_normmax
         
-        elif self.trans == 'box':
-            #Code for boxcox transform
-            from scipy.special import boxcox1p
-            feature_select = X.columns.to_list()
-            skewed_selected = list(set(self.skew_features) & set(feature_select))
-            for feat in skewed_selected:
-                X[feat] = boxcox1p(X[feat], 0.20)
-            return X
+        
+        feature_select = X.columns.to_list()
+        skewed_selected = list(set(self.numerical_features) & set(feature_select))
+        
+        further = list(set(self.further_skewed) & set(feature_select))
+        special = list(set(self.special_skewed) & set(feature_select))
+        
+        for feature in skewed_selected:
+            X[feature] = boxcox1p(X[feature], 0.70)
+            
+        for feature in further:
+            X[feature] = np.log1p(X[feature])
+            
+        for feature in special:
+            X[feature] = (X[feature])**2
+        
+        
+        # X = X.drop(self.to_drop,axis = 1)
+            
+        return X
             
             
         
