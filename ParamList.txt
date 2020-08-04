@@ -1,0 +1,13 @@
+July 26th:
+
+RF: {'criterion': 'mse', 'max_features': 'sqrt', 'min_samples_split': 4, 'n_estimators': 200}
+Mean: 0.13359158576745883
+Standard deviation: 0.006187549066143775
+
+
+
+July 29th:
+
+XGB:{'eta': 0.03, 'max_depth': 3, 'n_estimators': 800}
+Mean: 0.11699761031217255
+Standard deviation: 0.003530781775503572

@@ -30,19 +30,7 @@ def train_loader():
     attributes = attributes_with_price.drop(['SalePrice'],axis = 1)
     prices = np.log(prices)
     
-    from scipy.special import boxcox1p
-    lam = 0.30
     
-    count_log = ['LotFrontage','LotArea','GrLivArea','TotRmsAbvGrd','1stFlrSF']
-
-    count_box = ['BsmtUnfSF','GarageArea']
-
-    for feature in count_log:
-        attributes[feature] = np.log1p(attributes[feature])
-
-
-    for feature in count_box:
-        attributes[feature] = boxcox1p(attributes[feature],lam)
     
     
     #Imputing Missing values
@@ -56,9 +44,9 @@ def train_loader():
     attributes['BsmtCond'] =attributes['BsmtCond'].fillna('NA')
     
     
-    attributes['Utilities'] =attributes['Utilities'].fillna('AllPub')
-    attributes['Exterior1st'] =attributes['Exterior1st'].fillna('Other')
-    attributes['Exterior2nd'] =attributes['Exterior2nd'].fillna('Other')
+    attributes['Utilities'] =attributes['Utilities'].fillna(attributes['Utilities'].mode()[0])
+    attributes['Exterior1st'] =attributes['Exterior1st'].fillna(attributes['Exterior1st'].mode()[0])
+    attributes['Exterior2nd'] =attributes['Exterior2nd'].fillna(attributes['Exterior2nd'].mode()[0])
     attributes['BsmtExposure'] =attributes['BsmtExposure'].fillna('No')
     attributes['BsmtFinSF2'] =attributes['BsmtFinSF2'].fillna(0)
     attributes['BsmtHalfBath'] =attributes['BsmtHalfBath'].fillna(0)
